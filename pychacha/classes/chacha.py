@@ -346,7 +346,12 @@ class ChaCha():
 
             for filename in files:
                 name=os.path.join(root, filename)
-                self.encrypt_file(name)
+
+                try:
+                    self.encrypt_file(name)
+                    print(f"encrypted {name}")
+                except PermissionError:
+                    print(f"unable to encrypt {name} due to permissions")
 
         if nothing:
             return "empty"
@@ -359,7 +364,11 @@ class ChaCha():
 
             for filename in files:
                 name=os.path.join(root, filename)
-                x=self.decrypt_file(name)
+                try:
+                    x=self.decrypt_file(name)
+                    print(f"decrypted {name}")
+                except PermissionError:
+                    print(f"unable to decrypt {name} due to permissions")
                 if not x:
                     return False
         return True
