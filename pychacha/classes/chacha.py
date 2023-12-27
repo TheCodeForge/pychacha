@@ -29,7 +29,8 @@ class ChaCha():
 
     @property
     def nonce(self):
-        return int(time.time()*10**7)
+
+        return secrets.randbits(96)
 
     @property
     def key(self):
@@ -99,6 +100,28 @@ class ChaCha():
         output.reverse()
         return output
 
+    def noncechunk(self, nonce):
+
+        #this function also switches endian modes
+
+        bytelist=[]
+
+        while nonce:
+            chunkval = nonce & 0xFF
+            bytelist = [chunkval] + bytelist
+            nonce >>= 8
+
+        #left pad if needed
+        while len(bytelist)<12:
+            bytelist = [0]+bytelist
+        
+        output=[]
+        for i in range(len(bytelist)//4):
+            output.append(self.bits_concat(*tuple(bytelist[-1-4*i:-5-4*i:-1])))
+            
+        output.reverse()
+        return output
+
     def bits_concat(self, *args, bitlen=8):
 
         if any([x>2**bitlen-1 for x in args]):
@@ -125,7 +148,7 @@ class ChaCha():
             l.reverse()
         constants=[self.bits_concat(*tuple(x)) for x in constants]
 
-        nonce=self.keychunk(nonce, bytelen=12)
+        nonce=self.noncechunk(nonce)
 
         while pos < 0xFFFFFFFF:
             init_state=[
