@@ -107,7 +107,8 @@ class RSAChaCha(ChaCha):
 
         ChaCha.encrypt_file(self, f)
 
-        with open(f, "ba") as file:
+        with open(f, "br+") as file:
+            file.seek(0,2)
             file.write(self.encrypted_key.to_bytes(64))
 
         return True

@@ -225,9 +225,11 @@ class ChaCha():
 
     def crypto_stream(self, nonce=None):
 
-        if isinstance(nonce, bytes):
-            nonce=self.bits_concat(*nonce)
-        elif isinstance(nonce, int):
+        # if isinstance(nonce, bytes):
+        #     nonce=self.bits_concat(*nonce)
+        # el
+
+        if isinstance(nonce, int):
             nonce=nonce
         elif not nonce:
             nonce=self.nonce
@@ -275,6 +277,7 @@ class ChaCha():
             file.write(bytearray(digest))
         return True
 
+
     def decrypt_file(self, f):
         
         with open(f, "br+") as file:
@@ -282,7 +285,7 @@ class ChaCha():
             #extract nonce and verification bytes from end of file first
             file.seek(-76, 2)
             pos=file.tell()
-            noncebytes=file.read(12)
+            noncebytes=int.from_bytes(file.read(12))
             hash_chunk=file.read(64)
 
             file.seek(pos)
