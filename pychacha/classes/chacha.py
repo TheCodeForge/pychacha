@@ -285,14 +285,15 @@ class ChaCha():
             #extract nonce and verification bytes from end of file first
             file.seek(-76, 2)
             pos=file.tell()
-            noncebytes=int.from_bytes(file.read(12))
+            noncebytes=file.read(12)
+            nonce=int.from_bytes(noncebytes)
             hash_chunk=file.read(64)
 
             file.seek(pos)
             file.truncate()
             
 
-            stream=self.crypto_stream(nonce=noncebytes)
+            stream=self.crypto_stream(nonce=nonce)
             noncereturn=next(stream)
 
             sha = hashlib.new('sha512')
