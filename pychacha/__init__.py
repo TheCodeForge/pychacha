@@ -1,3 +1,7 @@
 from classes import *
 
-c=ChaCha()
+if __name__=="__main__":
+
+    c=RSAChaCha()
+    #c=ChaCha()
+    c.test()

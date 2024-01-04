@@ -8,7 +8,10 @@ class ChaChaDecryptionError(Exception):
 
 class ChaCha():
 
-    def __init__(self, key=None):
+    def __init__(self, key=None, rounds=10):
+
+        #runs chacha unit test on startup
+        #self.test()
 
         if key is None:
             #print("Generating random key")
@@ -26,6 +29,9 @@ class ChaCha():
             self.key=key & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         else:
             raise ValueError("key must be int or hex string (0x prefix optional)")
+
+        self.rounds=rounds
+
 
     @property
     def nonce(self):
@@ -160,7 +166,7 @@ class ChaCha():
             state=[x for x in init_state]
             
             #rounds
-            for i in range(10):
+            for i in range(self.rounds):
                 state=self.diag_round(self.column_round(state))
 
             #bitwise addition mod 2^32
@@ -195,9 +201,9 @@ class ChaCha():
 
         return sign + base36
         
-    def encrypt(self, data):
+    def encrypt(self, data, nonce=None):
 
-        nonce=self.nonce
+        nonce = nonce or self.nonce
         stream=self.chacha_stream(nonce)
 
         output=[]
@@ -372,3 +378,31 @@ class ChaCha():
                 if not x:
                     return False
         return True
+    
+
+    def test(self):
+
+        #test vectors comes straight from RFC 8439
+
+        #2.1.1 Test ChaCha Quarter Round
+        a, b, c, d = 0x11111111, 0x01020304, 0x9b8d6f43, 0x01234567
+        assert self.QR(a,b,c,d) == (0xea2a92f4, 0xcb1cf8ce, 0x4581472e, 0x5881c4bb)
+
+
+        #2.4.2 Test Cypher
+        self.key=0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+
+        nonce=0x000000000000004a00000000
+
+        plaintext="Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
+
+        self.rounds=10
+
+        cypher = self.encrypt(plaintext, nonce=nonce)
+        expected = "0x4a00000000:0x6e2e359a2568f98041ba0728dd0d6981e97e7aec1d4360c20a27afccfd9fae0bf91b65c5524733ab8f593dabcd62b3571639d624e65152ab8f530c359f0861d807ca0dbf500d6a6156a38e088a22b65e52bc514d16ccf806818ce91ab77937365af90bbf74a35be6b40b8eedf2785e42874d"
+ 
+        assert cypher==expected
+
+        decrypted = self.decrypt(cypher)
+
+        assert decrypted==plaintext
