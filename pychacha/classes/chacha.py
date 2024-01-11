@@ -394,6 +394,7 @@ class ChaCha():
 
 
         #2.4.2 Test Cypher
+        _key=self.__dict__['key']
         self.key=0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
 
         nonce=0x000000000000004a00000000
@@ -410,3 +411,5 @@ class ChaCha():
         decrypted = self.decrypt(cypher)
 
         assert decrypted==plaintext
+
+        self.key=_key
