@@ -383,7 +383,7 @@ class ChaCha():
                 name=os.path.join(root, filename)
                 try:
                     x=self.decrypt_file(name)
-                    print(f"decrypted {name}")
+                    print(f"decrypted {name} - {x}")
                 except PermissionError:
                     print(f"unable to decrypt {name} due to permissions")
                 if not x:
