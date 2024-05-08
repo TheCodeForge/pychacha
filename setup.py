@@ -5,7 +5,7 @@ with open("README.md", "r") as file:
 
 setuptools.setup(
     name="pychacha",
-    version="1.0.0",
+    version="1.0.1",
     description="ChaCha20 encryption tools for Python.",
     url="https://github.com/thecodeforge/pychacha",
     py_modules=["pychacha"],
