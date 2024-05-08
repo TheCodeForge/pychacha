@@ -2,6 +2,7 @@ import hashlib
 import os
 import secrets
 import time
+from io import BytesIO
 
 class ChaChaDecryptionError(Exception):
     pass
@@ -250,6 +251,8 @@ class ChaCha():
         
 
     def encrypt_file(self, f):
+
+        output=BytesIO()
         
         
         with open(f, "br+") as file:
@@ -260,6 +263,8 @@ class ChaCha():
             stream=self.crypto_stream()
             noncebytes=next(stream)
 
+            output.write(bytearray(noncebytes))
+
             sha = hashlib.new('sha512')
 
             file.seek(0)
@@ -268,59 +273,61 @@ class ChaCha():
                 chunksize=len(chunk)
                 sha.update(bytearray(chunk))
                 cryptext=stream.send(chunk)
-                file.seek(-1*chunksize, 1)
-                file.write(bytearray(cryptext))
+                #file.seek(-1*chunksize, 1)
+                output.write(bytearray(cryptext))
                 chunk=file.read(64)
 
             digest=sha.digest()
-            file.write(bytearray(noncebytes))
-            file.write(bytearray(digest))
+            output.write(bytearray(digest))
+
+            file.seek(0)
+            output.seek(0)
+            file.write(output.read())
+            file.truncate()
+
         return True
 
 
     def decrypt_file(self, f):
+
+        output=BytesIO()
         
         with open(f, "br+") as file:
 
-            #extract nonce and verification bytes from end of file first
-            file.seek(-76, 2)
-            pos=file.tell()
+            #extract nonce from start and and sha from end of file first
             noncebytes=file.read(12)
             nonce=int.from_bytes(noncebytes)
+
+            file.seek(-64, 2)
+            pos=file.tell()
             hash_chunk=file.read(64)
 
             file.seek(pos)
             file.truncate()
-            
-
+        
             stream=self.crypto_stream(nonce=nonce)
             noncereturn=next(stream)
 
             sha = hashlib.new('sha512')
-            file.seek(0)
+            file.seek(12)
 
-            
             chunk=file.read(64)
 
-            output=[]
             while chunk:
                 chunksize=len(chunk)
                 plainbytes = stream.send(chunk)
                 sha.update(bytearray(plainbytes))
-                output.append(plainbytes)
+                output.write(bytearray(plainbytes))
                 chunk=file.read(64)
 
-            if hash_chunk==sha.digest():
-                file.seek(0)
-                for chunk in output:
-                    file.write(bytearray(chunk))
-
-            else:
-                file.seek(pos)
-                file.write(bytearray(noncebytes))
-                file.write(bytearray(hash_chunk))
+            if hash_chunk!=sha.digest():
                 print("Wrong key")
                 return False
+
+            file.seek(0)
+            output.seek(0)
+            file.write(output.read())
+            file.truncate()
 
         return True
 
