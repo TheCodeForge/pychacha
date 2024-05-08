@@ -387,7 +387,7 @@ class ChaCha():
                 except PermissionError:
                     print(f"unable to decrypt {name} due to permissions")
                 if not x:
-                    return False
+                    raise ValueError("Unable to decrypt")
         return True
     
 
